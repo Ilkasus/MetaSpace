@@ -1,47 +1,48 @@
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from passlib.context import CryptContext
 from jose import jwt, JWTError
-from passlib.hash import bcrypt
-import uvicorn
+from datetime import datetime, timedelta
+
+from ..db import get_db, User
 import os
 
-app = FastAPI()
+router = APIRouter()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+SECRET_KEY = "super-secret-key"  # Лучше использовать os.environ.get("SECRET_KEY")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 дней
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-SECRET_KEY = "super-secret"  
-
-USERS = {}
-
-class User(BaseModel):
+class UserCreate(BaseModel):
     nickname: str
     password: str
 
-def create_token(username: str):
-    return jwt.encode({"sub": username}, SECRET_KEY, algorithm="HS256")
+class UserLogin(BaseModel):
+    nickname: str
+    password: str
 
-def decode_token(token: str):
-    return jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-@app.post("/register")
-def register(user: User):
-    if user.nickname in USERS:
-        raise HTTPException(status_code=400, detail="Nickname taken")
-    USERS[user.nickname] = bcrypt.hash(user.password)
-    return {"msg": "Registered"}
+@router.post("/register")
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    if db.query(User).filter_by(nickname=user.nickname).first():
+        raise HTTPException(status_code=400, detail="Nickname already taken")
+    hashed_password = pwd_context.hash(user.password)
+    db_user = User(nickname=user.nickname, hashed_password=hashed_password)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return {"msg": "Registered successfully"}
 
-@app.post("/login")
-def login(user: User):
-    hashed = USERS.get(user.nickname)
-    if not hashed or not bcrypt.verify(user.password, hashed):
-        raise HTTPException(status_code=401, detail="Invalid login")
-    token = create_token(user.nickname)
-    return {"token": token, "nickname": user.nickname}
-
+@router.post("/login")
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter_by(nickname=user.nickname).first()
+    if not db_user or not pwd_context.verify(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_access_token({"sub": db_user.nickname})
+    return {"access_token": token, "nickname": db_user.nickname}
