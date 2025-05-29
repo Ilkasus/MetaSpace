@@ -28,3 +28,22 @@ async def chat_message(sid, data):
 
 if __name__ == '__main__':
     web.run_app(app, port=5000)
+
+
+connected_players = {}
+
+@sio.event
+async def connect(sid, environ):
+    connected_players[sid] = {"nickname": None, "position": [0, 0, 0], "rotation": [0, 0, 0]}
+    await sio.emit('players_update', connected_players)
+
+@sio.event
+async def disconnect(sid):
+    connected_players.pop(sid, None)
+    await sio.emit('players_update', connected_players)
+
+@sio.event
+async def player_move(sid, data):
+    if sid in connected_players:
+        connected_players[sid].update(data)  # data должен содержать nickname, position, rotation
+    await sio.emit('players_update', connected_players)
