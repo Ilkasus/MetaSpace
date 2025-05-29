@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI
 from app.api import users, auth
-from socket_server import app
+from app.socket_server import app
 
 app = FastAPI()
 
