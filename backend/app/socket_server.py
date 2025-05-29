@@ -1,29 +1,29 @@
+import asyncio
 import socketio
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from aiohttp import web
 
-sio = socketio.AsyncServer(cors_allowed_origins='*', async_mode='asgi')
-app = FastAPI()
+sio = socketio.AsyncServer(cors_allowed_origins='*')
+app = web.Application()
+sio.attach(app)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app = socketio.ASGIApp(sio, other_asgi_app=app)
+connected_users = set()
 
 @sio.event
 async def connect(sid, environ):
-    print(f"User connected: {sid}")
-
-@sio.event
-async def send_comment(sid, data):
-    print(f"Comment received: {data}")
-    await sio.emit('new_comment', data)
+    print(f'Client connected: {sid}')
+    connected_users.add(sid)
+    await sio.emit('users_count', len(connected_users))
 
 @sio.event
 async def disconnect(sid):
-    print(f"User disconnected: {sid}")
+    print(f'Client disconnected: {sid}')
+    connected_users.discard(sid)
+    await sio.emit('users_count', len(connected_users))
+
+@sio.event
+async def message(sid, data):
+    print(f'Message from {sid}: {data}')
+    await sio.emit('message', data)  # ретранслируем всем
+
+if __name__ == '__main__':
+    web.run_app(app, port=5000)
