@@ -11,11 +11,15 @@ Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://meta-space-nu.vercel.app"],  
+    allow_origins=[
+        "https://meta-space-nu.vercel.app",
+        "https://meta-space-oo2t7fmki-ilkasus-projects.vercel.app" 
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/")
 def root():
