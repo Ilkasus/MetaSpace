@@ -5,7 +5,9 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 
-from ..db import get_db, User
+from app.db.session import get_db
+from app.models.user import User
+
 import os
 
 router = APIRouter()
