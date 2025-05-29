@@ -8,3 +8,5 @@ passlib[bcrypt]
 pydantic[email]
 python-multipart
 python-socketio[asyncio]
+aiohttp
+
