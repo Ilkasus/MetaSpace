@@ -5,19 +5,25 @@ sio = socketio.AsyncServer(cors_allowed_origins='*')
 app = web.Application()
 sio.attach(app)
 
-connected_users = set()
+connected_players = {}  # sid -> {nickname, position, rotation}
 
 @sio.event
 async def connect(sid, environ):
     print(f"🔌 Client connected: {sid}")
-    connected_users.add(sid)
-    await sio.emit('users_count', len(connected_users))
+    connected_players[sid] = {
+        "nickname": None,
+        "position": [0, 0, 0],
+        "rotation": [0, 0, 0]
+    }
+    await sio.emit('players_update', connected_players)
+    await sio.emit('users_count', len(connected_players))
 
 @sio.event
 async def disconnect(sid):
     print(f"❌ Client disconnected: {sid}")
-    connected_users.discard(sid)
-    await sio.emit('users_count', len(connected_users))
+    connected_players.pop(sid, None)
+    await sio.emit('players_update', connected_players)
+    await sio.emit('users_count', len(connected_players))
 
 @sio.event
 async def chat_message(sid, data):
@@ -26,24 +32,11 @@ async def chat_message(sid, data):
     print(f"💬 [{nickname}]: {text}")
     await sio.emit('chat_message', {'nickname': nickname, 'text': text})
 
-if __name__ == '__main__':
-    web.run_app(app, port=5000)
-
-
-connected_players = {}
-
-@sio.event
-async def connect(sid, environ):
-    connected_players[sid] = {"nickname": None, "position": [0, 0, 0], "rotation": [0, 0, 0]}
-    await sio.emit('players_update', connected_players)
-
-@sio.event
-async def disconnect(sid):
-    connected_players.pop(sid, None)
-    await sio.emit('players_update', connected_players)
-
 @sio.event
 async def player_move(sid, data):
     if sid in connected_players:
-        connected_players[sid].update(data)  # data должен содержать nickname, position, rotation
+        connected_players[sid].update(data)
     await sio.emit('players_update', connected_players)
+
+if __name__ == '__main__':
+    web.run_app(app, port=5000)
