@@ -12,9 +12,9 @@ import os
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = "super-secret-key"  # Лучше использовать os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get("SECRET_KEY", "super-secret-key")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 дней
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
 class UserCreate(BaseModel):
     nickname: str
@@ -46,5 +46,5 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter_by(nickname=user.nickname).first()
     if not db_user or not pwd_context.verify(user.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token({"sub": db_user.nickname})
+    token = create_access_token({"sub": db_user.nickname}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"access_token": token, "nickname": db_user.nickname}
