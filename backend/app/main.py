@@ -9,17 +9,20 @@ app = FastAPI(title="MetaSpace API")
 
 Base.metadata.create_all(bind=engine)
 
+origins = [
+    "http://localhost:3000",
+    "https://meta-space-nu.vercel.app",
+    "https://meta-space-mswzhfapn-ilkasus-projects.vercel.app",
+    "https://meta-space-oo2t7fmki-ilkasus-projects.vercel.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://meta-space-nu.vercel.app",
-        "https://meta-space-oo2t7fmki-ilkasus-projects.vercel.app" 
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/")
 def root():
