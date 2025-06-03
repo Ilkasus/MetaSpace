@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, users
 from app.db import Base, engine
-from app.socket_server import socket_app 
 from fastapi.middleware.wsgi import WSGIMiddleware
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware as StarletteCORSMiddleware
