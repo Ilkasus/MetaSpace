@@ -10,3 +10,4 @@ python-multipart
 python-socketio[asyncio]
 aiohttp
 itsdangerous
+bcrypt==4.0.1
