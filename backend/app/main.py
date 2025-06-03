@@ -28,6 +28,11 @@ fastapi_app.add_middleware(
 fastapi_app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 fastapi_app.include_router(users.router, prefix="/users", tags=["Users"])
 
+@fastapi_app.get("/")
+async def root():
+    return {"message": "MetaSpace backend is running"}
+
+
 sio = socketio.AsyncServer(
     async_mode='asgi',
     cors_allowed_origins=origins
