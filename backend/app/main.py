@@ -25,6 +25,7 @@ fastapi_app.add_middleware(
     allow_headers=["*"],
 )
 
+# Включение маршрутов API
 fastapi_app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 fastapi_app.include_router(users.router, prefix="/users", tags=["Users"])
 
@@ -32,14 +33,13 @@ fastapi_app.include_router(users.router, prefix="/users", tags=["Users"])
 async def root():
     return {"message": "MetaSpace backend is running"}
 
-
 sio = socketio.AsyncServer(
     async_mode='asgi',
     cors_allowed_origins=origins
 )
 
 @sio.event
-async def connect(sid, environ):
+async def connect(sid, environ, auth):
     print(f"Client connected: {sid}")
 
 @sio.event
