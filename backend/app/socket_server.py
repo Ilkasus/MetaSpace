@@ -1,11 +1,16 @@
 import socketio
 from aiohttp import web
 
-sio = socketio.AsyncServer(cors_allowed_origins='*')
+sio = socketio.AsyncServer(cors_allowed_origins=[
+    "http://localhost:3000",
+    "https://meta-space-nu.vercel.app",
+    "https://meta-space-mswzhfapn-ilkasus-projects.vercel.app",
+    "https://meta-space-oo2t7fmki-ilkasus-projects.vercel.app"
+])
 app = web.Application()
 sio.attach(app)
 
-connected_players = {}  # sid -> {nickname, position, rotation}
+connected_players = {}
 
 @sio.event
 async def connect(sid, environ):
@@ -29,8 +34,8 @@ async def disconnect(sid):
 async def chat_message(sid, data):
     nickname = data.get('nickname', 'Anonymous')
     text = data.get('text', '')
-    print(f"💬 [{nickname}]: {text}")
-    await sio.emit('chat_message', {'nickname': nickname, 'text': text})
+    print(f"💬 chat_message received from {sid}: {nickname}: {text}")
+    await sio.emit('receive_message', {'nickname': nickname, 'text': text})
 
 @sio.event
 async def player_move(sid, data):
@@ -38,5 +43,4 @@ async def player_move(sid, data):
         connected_players[sid].update(data)
     await sio.emit('players_update', connected_players)
 
-if __name__ == '__main__':
-    web.run_app(app, port=5000)
+socket_app = app
