@@ -9,4 +9,4 @@ pydantic[email]
 python-multipart
 python-socketio[asyncio]
 aiohttp
-
+itsdangerous
