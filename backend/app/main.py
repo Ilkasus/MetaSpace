@@ -50,8 +50,9 @@ async def chat_message(sid, data):
 async def player_move(sid, data):
     await sio.emit('players_update', data, skip_sid=sid)
 
-sio_app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
+app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run(sio_app, host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)
+
