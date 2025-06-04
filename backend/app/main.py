@@ -33,30 +33,45 @@ async def root():
     return {"message": "MetaSpace backend is running"}
 
 sio = socketio.AsyncServer(
-    async_mode='asgi',
+    async_mode="asgi",
     cors_allowed_origins=origins
 )
+
+connected_players = {}
 
 @sio.event
 async def connect(sid, environ, auth):
     print(f"🔌 Client connected: {sid}")
+    connected_players[sid] = {
+        "nickname": None,
+        "position": [0, 0, 0],
+        "rotation": [0, 0, 0]
+    }
+    await sio.emit("players_update", connected_players)
+    await sio.emit("users_count", len(connected_players))
 
 @sio.event
 async def disconnect(sid):
     print(f"❌ Client disconnected: {sid}")
+    connected_players.pop(sid, None)
+    await sio.emit("players_update", connected_players)
+    await sio.emit("users_count", len(connected_players))
 
 @sio.event
 async def chat_message(sid, data):
-    print(f"💬 Message from {sid}: {data}")
-    await sio.emit('chat_message', data)  # <== ИСПРАВЛЕНО (было: 'receive_message')
+    nickname = data.get("nickname", "Anonymous")
+    text = data.get("text", "")
+    print(f"💬 {nickname}: {text}")
+    await sio.emit("receive_message", {"nickname": nickname, "text": text})
 
 @sio.event
 async def player_move(sid, data):
-    await sio.emit('players_update', data, skip_sid=sid)
+    if sid in connected_players:
+        connected_players[sid].update(data)
+    await sio.emit("players_update", connected_players, skip_sid=sid)
 
 app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
 
-# Точка входа при локальном запуске
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)
