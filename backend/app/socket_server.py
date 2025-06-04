@@ -4,8 +4,8 @@ from aiohttp import web
 sio = socketio.AsyncServer(cors_allowed_origins=[
     "http://localhost:3000",
     "https://meta-space-nu.vercel.app",
-    "https://meta-space-mswzhfapn-ilkasus-projects.vercel.app",
-    "https://meta-space-oo2t7fmki-ilkasus-projects.vercel.app"
+    "https://meta-space-git-main-ilkasus-projects.vercel.app",
+    "https://meta-space-rnsp4pzky-ilkasus-projects.vercel.app"
 ])
 app = web.Application()
 sio.attach(app)
