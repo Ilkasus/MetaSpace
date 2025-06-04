@@ -12,7 +12,7 @@ origins = [
     "http://localhost:3000",
     "https://meta-space-nu.vercel.app",
     "https://meta-space-git-main-ilkasus-projects.vercel.app",
-    "https://meta-space-73cpvvgl8-ilkasus-projects.vercel.app"
+    "https://meta-space-74z744fsz-ilkasus-projects.vercel.app"
 ]
 
 fastapi_app = FastAPI(title="MetaSpace API")
